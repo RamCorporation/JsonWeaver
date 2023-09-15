@@ -1,4 +1,4 @@
-package ramgames.jsonweaver;
+package ramgames.jsonweaver.exceptions;
 
 public class TypeException extends RuntimeException {
 
