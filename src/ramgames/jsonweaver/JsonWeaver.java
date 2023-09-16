@@ -64,7 +64,7 @@ public interface JsonWeaver {
                             JsonObject jsonObject = process(reservedTokens);
                             reservedTokens = new ArrayList<>();
                             if(jsonObject instanceof JsonArray) parentHash.putJsonArray(key, (JsonArray) jsonObject);
-                            else parentHash.putJsonObject(key, (JsonHash) jsonObject);
+                            else parentHash.putJsonHash(key, (JsonHash) jsonObject);
                         }
                     }
                 }
@@ -164,37 +164,55 @@ public interface JsonWeaver {
     static void write(File file, JsonObject jsonObject, int indentSize, boolean sortAlphabetically) throws IOException {
         FileWriter fileWriter = new FileWriter(file);
         String jsonString = (sortAlphabetically && jsonObject instanceof JsonHash jsonHash) ? jsonHash.toSortedString() : jsonObject.toString();
-        List<String> tokens = Tokenizer.tokenizeString(jsonString);
-        String indentThickness = " ".repeat(indentSize);
-        final int[] indent = {0};
-        final StringBuilder[] line = {new StringBuilder()};
-        tokens.forEach(token -> {
-            Set<Expectations> expectation = Expectations.getPossibleMatches(token);
-            switch (expectation.iterator().next()) {
-                case OPEN_BRACKET, OPEN_CURLY -> {
-                    line[0].append(token);
-                    indent[0]++;
+        String indentSpacing = " ".repeat(indentSize);
+        int indents = 0;
+        int quoteCount = 0;
+        StringBuilder builder = new StringBuilder();
+        boolean newLine = false;
+
+        for(char charcoal: jsonString.toCharArray()) {
+            switch (charcoal) {
+                case '{','[' -> {
+                    if(newLine) builder.append(indentSpacing.repeat(indents));
+                    builder.append(charcoal).append("\n");
+                    newLine = true;
+                    indents++;
                 }
-                case CLOSE_BRACKET, CLOSE_CURLY -> {
-                    indent[0]--;
-                    line[0].append(token);
+                case '}',']' -> {
+                    builder.append("\n").append(indentSpacing.repeat(indents-1));
+                    builder.append(charcoal);
+                    newLine = true;
+                    indents--;
                 }
-                case COMMA -> {
-                    line[0].append(token);
-                    try {
-                        fileWriter.write(line[0].toString());
-                    } catch (IOException e) {
-                        System.err.printf("failed to write line \"%s\" due to: %s\n", line[0], e.getMessage());
+                case ',' -> {
+                    builder.append(charcoal).append("\n");
+                    newLine = true;
+                }
+                case '"' -> {
+                    quoteCount++;
+                    if(newLine) {
+                        builder.append(indentSpacing.repeat(indents));
+                        newLine = false;
                     }
-                    line[0] = new StringBuilder(indentThickness.repeat(indent[0]));
+                    builder.append(charcoal);
                 }
-                default -> line[0].append(token);
+                case ' ' -> builder.append(quoteCount % 2 == 1 ? charcoal : "");
+                case ':' -> builder.append(": ");
+                default -> {
+                    if(newLine) {
+                        builder.append(indentSpacing.repeat(indents));
+                        newLine = false;
+                    }
+                    builder.append(charcoal);
+                }
             }
-        });
+        }
+
         try {
+            fileWriter.write(builder.toString());
             fileWriter.close();
         } catch (IOException e) {
-            System.err.println("failed to close writer due to: " +e.getMessage());
+            System.err.println("failed to close writer due to: " + e.getMessage());
         }
     }
 }

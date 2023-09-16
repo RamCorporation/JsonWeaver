@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Jsonify.iml" filepath="$PROJECT_DIR$/Jsonify.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JsonWeaver.iml" filepath="$PROJECT_DIR$/JsonWeaver.iml" />
     </modules>
   </component>
 </project>

@@ -76,7 +76,7 @@ public class JsonHash extends JsonObject {
         contents.put(key, object);
     }
 
-    public void putJsonObject(String key, JsonHash object) {
+    public void putJsonHash(String key, JsonHash object) {
         contents.put(key, object);
     }
 
